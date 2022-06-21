@@ -1,0 +1,55 @@
+﻿@model IEnumerable<MyNotes.EntityLayer.Category>
+
+@{
+    ViewBag.Title = "Index";
+}
+<section class="py-5">
+    <div class="container px-4 px-lg-5 mt-5">
+        <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
+            <p><a href="/Category/Create" class="btn btn-primary">YENİ KAYIT</a></p>
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>@Html.DisplayNameFor(model => model.Id)</th>
+                        <th>@Html.DisplayNameFor(model => model.Title)</th>
+                        <th>@Html.DisplayNameFor(model => model.Description)</th>
+                        @*<th>@Html.DisplayNameFor(model => model.CreatedOn)</th>
+                        <th>@Html.DisplayNameFor(model => model.ModifiedOn)</th>
+                        <th>@Html.DisplayNameFor(model => model.ModifiedUserName)</th>*@
+                        <th>DURUM</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var k in Model)
+                    {
+                        <tr>
+                            <td>@k.Id</td> @*<td>@Html.DisplayFor(modelItem=>k.Title)</td>*@
+                            <td>@k.Title</td>
+                            <td>@k.Description</td>
+                            @*<td>@k.CreatedOn</td>
+                            <td>@k.ModifiedOn</td>
+                            <td>@k.ModifiedUserName</td>*@
+                            <td class="d-flex justify-content-around">
+                     
+                                    @Bootstrap.LinkButton("/Category/Edit/" + @k.Id, "warning", "btn-sm", "Guncelle", string.Empty,"bi bi-pencil", String.Empty)
+                                    @*<a href="/Category/Edit/@k.Id" class="btn btn-warning" title="Guncelle">
+            <i class="bi bi-pencil"></i>
+        </a>
+        @Html.ActionLink("Edit", "Edit", new { id = k.Id })
+
+
+        @Html.ActionLink("Details", "Details", new { id = k.Id })*@
+                                    @Bootstrap.LinkButton("/Category/Details/" + @k.Id, "primary", "btn-sm", "Detaylar", string.Empty, "bi bi-search", string.Empty)
+
+
+                                    @*@Html.ActionLink("Delete", "Delete", new { id = k.Id })*@
+                                    @Bootstrap.LinkButton("/Category/Delete/" + @k.Id, "danger", "btn-sm", "Sil", string.Empty, "bi bi-trash", string.Empty)
+         
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>

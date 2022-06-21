@@ -1,0 +1,180 @@
+﻿@*@using MyNotes.BusinessLayer*@
+@{
+    //NoteManager mn = new NoteManager();
+    //var lst = mn.List();
+}
+@{
+    ViewBag.Title = "Home Page";
+}
+
+<section class="py-5">
+    <div class="container fluid px-4 px-lg-5 mt-3">
+        <div class="row gx-4 gx-lg-5 row-cols-1 row-cols-xl-3 justify-content-center">
+            @{
+                int i = 0;
+            }
+            @foreach (var note in Model)
+            {
+                <div class="col mb-3">
+                    <div class="card h-100">
+                        <!-- Sale badge-->
+                        <div class="badge bg-dark text-white position-absolute" style="top: 0.5rem; right: 0.5rem">Sale</div>
+                        <!-- Product image-->
+                        <img class="card-img-top" src="https://dummyimage.com/450x300/dee2e6/6c757d.jpg" alt="..." />
+                        <!-- Product details-->
+                        <div class="card-body py-4 px-1">
+                            <div class="text-center">
+                                <!-- Product name-->
+                                <h5 class="fw-bolder">@note.Title</h5>
+                                <!-- Product reviews-->
+                                <div class="d-flex justify-content-between small">
+                                    <div>
+                                        <i class="far fa-user"></i>@note.Owner.UserName
+                                    </div>
+                                    <div>
+                                        <i class="far fa-clock"></i>@note.ModifiedOn
+                                    </div>
+                                </div>
+                                <p class="card-text">
+                                    @if (string.IsNullOrEmpty(note.Text) == false && note.Text.Length > 70)
+                                    {
+                                        @(note.Text.Substring(0, 70)) <span class="text-danger">@("...")</span>
+                                    }
+                                    else if (string.IsNullOrEmpty(note.Text))
+                                    {
+                                        <span class="text-danger">@("...")</span>
+                                    }
+                                    else
+                                    {
+                                        @note.Text
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                        <hr />
+                        <!-- Product actions-->
+                        <div class="bg-transparent d-flex justify-content-between">
+                            <p>
+                                <button class="btn btn-outline-light text-dark btn-sm">
+                                    <i class="bi-star-fill text-danger "></i>@note.LikeCount
+                                </button>
+                            </p>
+                            <p>
+                                <button type="button" class="btn btn-outline-light text-dark btn-sm" data-bs-toggle="modal" data-bs-target="#modal_comment" data-note-id="@note.Id">
+                                    <i class="bi bi-chat-left-dots-fill text-danger "></i>Yorumlar
+                                </button>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+
+@Bootstrap.ModalPopup("modal_comment", "Yorumlar")
+<script src="../../Scripts/jquery-3.6.0.min.js"></script>
+<script>
+    var noteId = -1;
+    var modalCommentBodyId = "#modal_comment_body";
+    $(function () {
+        $('#modal_comment').on('show.bs.modal',
+            function (e) {
+                var btn = $(e.relatedTarget);
+                noteId = btn.data("note-id");
+                $(modalCommentBodyId).load("/Comment/ShowNoteComments/" + noteId);
+            });
+    });
+
+    function doComment(btn, e, commentId, spanId) {
+        var button = $(btn);
+        var mode = button.data('edit-mode');
+        if (e === 'edit_clicked') //hem tipi hem değeri eşit olamk zorunda ;'==='
+        {
+            if (!mode) {
+                button.data('edit-mode', true);//aktif hale getirdik
+                button.removeClass('btn-warning'); //
+                button.addClass('btn-success');
+                var btnSpan = button.find('span'); //butonun içerisindeki span tagını bul
+                btnSpan.removeClass('bi-pencil'); //bu span tagının classını kaldır
+                btnSpan.addClass('bi-check'); //onun yerine classs olarak bunu ekle
+                $(spanId).addClass('editable'); //izni vermek için editable adında bir class oluştur
+                $(spanId).attr('contenteditable', true); // contenteditable özelliğini true yap
+                $(spanId).focus(); //spana focus ol
+            }
+            else {
+                button.data('edit-mode', false);//pasif hale getirdik
+                button.removeClass('btn-success');
+                button.addClass('btn-warning');
+                var btnSpan = button.find('span');
+                btnSpan.removeClass('bi-check');
+                btnSpan.addClass('bi-pencil');
+                $(spanId).addClass('editable');
+                $(spanId).attr('contenteditable', false);
+
+                var txt = $(spanId).text(); //spanId den text'e ulaşıyoruz
+                $.ajax({ //ajax:sayfa yenilenmeden ilgili alandaki bilgilerimi güncelleyebileceğim
+                    method: "POST", //POST işlemi yapıcağımız için
+                    url: "/Comment/Edit/" + commentId,
+                    data: { text: txt } //text tipinde bir txt gönderiyorum veri olarak
+                }).done(function (data) {
+                    if (data.result) { //eğer true ise result
+                        //yorumları tekrar yükleme işlemi yapsın
+                        $(modalCommentBodyId).load("/Comment/ShowNoteComments/" + noteId);
+                    }
+                    else {//result false gelirse
+                        alert("Yorumunuz Güncellenemedi.");
+                    }
+                }).fail(function () {
+                    alert("Sunucu ile Bağlantı Kurulamadı");
+                });
+
+            }
+        }
+        else if (e === 'delete_clicked') {
+            var dialog_res = confirm("Yorum silinsin mi?");
+            if (!dialog_res) {
+                return false;
+            }
+            $.ajax({
+                method: "GET",
+                url: "/Comment/Delete/" + commentId
+            }).done(function (data) {
+                if (data.result) {
+                    $(modalCommentBodyId).load("/Comment/ShowNoteComments/" + noteId);
+                } else {
+                    alert("Yorum silinemedi!");
+                }
+            }).fail(function () {
+                alert("Sunucu ile baglanti kurulamadi!");
+            });
+        }
+        else if (e === "new_clicked") {
+            var txt = $("#new_comment_text").val();
+            /*console.log("txt:"+txt);*/
+            //var txt1 = $("#new_comment_text").text();
+            //console.log("txt1:"+txt1) burası çalışmaz çünkü inputun bir text alanı yok o yüzden text() değeri getirmez
+            $.ajax({
+                method: "POST",
+                url: "/Comment/Create",
+                data: { "text": txt, "noteid": noteId }
+            }).done(function (data) {
+                if (data.result) {
+                    $(modalCommentBodyId).load("/Comment/ShowNoteComments/" + noteId);
+                } else {
+                    alert("Yorum silinemedi!");
+                }
+            }).fail(function () {
+                alert("Sunucu ile baglanti kurulamadi!");
+            });
+
+        }
+
+    }
+ 
+
+</script>
+
+
+

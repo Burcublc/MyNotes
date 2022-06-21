@@ -1,0 +1,36 @@
+﻿@using MyNotes.BusinessLayer   <!--Mangerımızı tanıtmamız lazım--><!--Ayrıca listelemek bu layerı tanıttık-->
+@*@using MyNotes.EntityLayer*@    <!--Category sınıfına ulaşmak için Entitylayerı tanıttık-->
+@*@using MyNotes.MVC.Models*@
+@using MyNotes.BusinessLayer.Modals
+@{ 
+    //CategoryManager cm = new CategoryManager();
+    //var list = cm.List();
+    var list = CacheHelper.GetCategoriesFromCache();
+    NoteManager nm = new NoteManager();
+}
+<div id="category1">
+    <p class="lead mt-3">
+        <span class="fw-bolder">Kategoriler</span>
+    </p>
+    <div class="list-group">
+        <a href="@Url.Action("Index","Home")" class="list-group-item-action active">
+            <span>
+                <i class="fas fa-angle-double-right"></i>Tümü
+            </span>
+        </a>
+        @foreach(var cat in list)
+         {
+            <a href="/Home/ByCategoryId/@cat.Id" title="@cat.Description" class="list-group-item list-group-item-action"   onmouseover="style.backgroundColor='red'" onmouseout="style.backgroundColor='white'" >
+                <span >
+                    <i class="fas fa-angle-double-right" ></i>
+                </span>@cat.Title 
+                @{  
+                    int count = nm.QList().Count(s => s.Category.Id == cat.Id);
+                }
+                <span>
+                   &nbsp;&nbsp; @count
+                </span>
+            </a>
+         }
+    </div>
+</div>
